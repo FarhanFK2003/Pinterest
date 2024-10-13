@@ -1,6 +1,7 @@
 # Pinterest
 
 **Project Overview**
+
 I built this project as a basic Pinterest clone using Jetpack Compose to practice UI development and layout design. The app features a login screen with social media sign-in options, a home screen that displays a grid of images, and a saved screen where users can search for their saved pins. This project is focused on the front-end aspect, specifically on creating visually appealing layouts, and does not currently include any backend logic or data storage.
 
 **Setup Instructions**
