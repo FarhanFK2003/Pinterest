@@ -1,9 +1,12 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.pinterest
 
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.camera.core.Camera
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,6 +25,11 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.AddChart
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,12 +46,34 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.pinterest.ui.theme.PinterestTheme
+import kotlinx.coroutines.launch
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 
 
 class MainActivity : ComponentActivity() {
@@ -314,13 +344,28 @@ fun LoginScreenPreview() {
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
+
+    // Remember bottom sheet state and coroutine scope
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    // State to control visibility of the bottom sheet
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(navController = navController, currentRoute = currentRoute)
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                onCreateClick = {
+                    showBottomSheet = true // Trigger bottom sheet visibility
+                }
+            )
         }
     ) { innerPadding ->
         Column(
@@ -334,17 +379,33 @@ fun HomeScreen(navController: NavController) {
                 text = "All",
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                modifier = Modifier.padding(vertical = 5.dp)
+                modifier = Modifier
+                    .padding(vertical = 5.dp)
                     .align(Alignment.CenterHorizontally),
                 fontSize = 22.sp
             )
-            ImagesGrid() // The grid of images
+            ImagesGrid(navController) // The grid of images
         }
+
+        // Use the extracted BottomSheetContent composable
+        BottomSheetContent(
+            sheetState = sheetState,
+            showBottomSheet = showBottomSheet,
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                }.invokeOnCompletion {
+                    if (!sheetState.isVisible) {
+                        showBottomSheet = false
+                    }
+                }
+            }
+        )
     }
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavController, currentRoute: String?) {
+fun BottomNavigationBar(navController: NavController, currentRoute: String?, onCreateClick: () -> Unit) {
     BottomAppBar(
         containerColor = Color.White,
         contentColor = Color.Black
@@ -387,7 +448,9 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?) {
                 Text(text = "Create")
             },
             selected = false,
-            onClick = { /* Handle create click */ }
+            onClick = {
+                onCreateClick() // Call the lambda to trigger bottom sheet
+            }
         )
         NavigationBarItem(
             icon = {
@@ -422,87 +485,152 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?) {
     }
 }
 
+//@Composable
+//fun ImagesGrid() {
+//    Column(
+//        modifier = Modifier.fillMaxWidth(),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        // First row of images
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            ImageCard(R.drawable.image1)
+//            ImageCard(R.drawable.image2)
+//        }
+//        Spacer(modifier = Modifier.height(16.dp)) // Space between rows
+//        // Second row of images
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            ImageCard(R.drawable.image3)
+//            ImageCard(R.drawable.image4)
+//        }
+//        Spacer(modifier = Modifier.height(16.dp)) // Space between rows
+//        // Third row of images
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            ImageCard(R.drawable.image1)
+//            ImageCard(R.drawable.image2)
+//        }
+//        Spacer(modifier = Modifier.height(16.dp)) // Space between rows
+//        // Fourth row of images
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            ImageCard(R.drawable.image3)
+//            ImageCard(R.drawable.image4)
+//        }
+//    }
+//}
+//
+//@Composable
+//fun ImageCard(imageRes: Int) {
+//    Card(
+//        modifier = Modifier
+//            .size(150.dp)
+//            .padding(8.dp),
+//        shape = RoundedCornerShape(8.dp)
+//    ) {
+//        Image(
+//            painter = painterResource(id = imageRes),
+//            contentDescription = "Image",
+//            contentScale = ContentScale.Crop,
+//            modifier = Modifier.fillMaxSize()
+//        )
+//    }
+//}
+
 @Composable
-fun ImagesGrid() {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+fun ImagesGrid(navController: NavController) {
+    // List of image resources
+    val images = listOf(
+        R.drawable.image1,
+        R.drawable.image2,
+        R.drawable.image3,
+        R.drawable.image4,
+        R.drawable.image1,
+        R.drawable.image2,
+        R.drawable.image3,
+        R.drawable.image4
+    )
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2), // 2 columns in the grid
+        contentPadding = PaddingValues(16.dp), // Padding around the grid
+        verticalArrangement = Arrangement.spacedBy(16.dp), // Space between rows
+        horizontalArrangement = Arrangement.spacedBy(16.dp), // Space between columns
+        modifier = Modifier.fillMaxSize()
     ) {
-        // First row of images
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            ImageCard(R.drawable.image1)
-            ImageCard(R.drawable.image2)
-        }
-        Spacer(modifier = Modifier.height(16.dp)) // Space between rows
-        // Second row of images
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            ImageCard(R.drawable.image3)
-            ImageCard(R.drawable.image4)
-        }
-        Spacer(modifier = Modifier.height(16.dp)) // Space between rows
-        // Third row of images
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            ImageCard(R.drawable.image1)
-            ImageCard(R.drawable.image2)
-        }
-        Spacer(modifier = Modifier.height(16.dp)) // Space between rows
-        // Fourth row of images
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            ImageCard(R.drawable.image3)
-            ImageCard(R.drawable.image4)
+        // Render each image in the grid
+        items(images) { imageRes ->
+            ImageCard(imageRes, navController)
         }
     }
 }
 
 @Composable
-fun ImageCard(imageRes: Int) {
+fun ImageCard(imageRes: Int, navController: NavController) {
     Card(
         modifier = Modifier
-            .size(150.dp)
-            .padding(8.dp),
+            .size(150.dp) // Image size
+            .clip(RoundedCornerShape(8.dp))
+            .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp)
     ) {
         Image(
             painter = painterResource(id = imageRes),
             contentDescription = "Image",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable {
+                    // Navigate to the edit screen on click
+                    navController.navigate("imageDetail")
+                }
         )
     }
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchUI(navController: NavController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
+
+    // Remember bottom sheet state and coroutine scope
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    // State to control visibility of the bottom sheet
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(navController = navController, currentRoute = currentRoute)
-        },
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                onCreateClick = {
+                    showBottomSheet = true // Trigger bottom sheet visibility
+                }
+            )
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
+            // Search input
             OutlinedTextField(
                 value = "",
                 onValueChange = { /* Handle input change */ },
@@ -523,6 +651,21 @@ fun SearchUI(navController: NavController) {
                 )
             )
         }
+
+        // Use the extracted BottomSheetContent composable
+        BottomSheetContent(
+            sheetState = sheetState,
+            showBottomSheet = showBottomSheet,
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                }.invokeOnCompletion {
+                    if (!sheetState.isVisible) {
+                        showBottomSheet = false
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -556,7 +699,7 @@ fun AppNavigation() {
         composable("inbox") {
             NotificationsInboxScreen(navController) // Updates screen
         }
-        
+
         composable("pins") {
             SavedScreenPins(navController)
         }
@@ -573,6 +716,13 @@ fun AppNavigation() {
             AvatarScreen(navController)
         }
 
+        composable("profile") {
+            EditProfileScreen(navController)
+        }
+
+        composable("imageDetail") {
+            ImageDetailScreen(navController)
+        }
     }
 }
 
@@ -590,22 +740,53 @@ fun SearchScreenPreview() {
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(navController: NavController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
+
+    // Remember bottom sheet state and coroutine scope
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    // State to control visibility of the bottom sheet
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             NotificationsTopBar(navController)
         },
         bottomBar = {
-            BottomNavigationBar(navController, currentRoute = currentRoute)
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                onCreateClick = {
+                    showBottomSheet = true // Trigger bottom sheet visibility
+                }
+            )
         }
     ) {
         // Added padding for spacing between the top bar and notifications list
         NotificationsList(
             notifications = sampleNotifications(),
-            modifier = Modifier.padding(top = 36.dp) // Padding to create space between top bar and list
+            modifier = Modifier
+                .padding(top = 36.dp) // Padding to create space between top bar and list
+        )
+
+        // Use the extracted BottomSheetContent composable
+        BottomSheetContent(
+            sheetState = sheetState,
+            showBottomSheet = showBottomSheet,
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                }.invokeOnCompletion {
+                    if (!sheetState.isVisible) {
+                        showBottomSheet = false
+                    }
+                }
+            }
         )
     }
 }
@@ -730,22 +911,53 @@ fun NotificationsScreenPreview() {
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsInboxScreen(navController: NavController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
+
+    // Remember bottom sheet state and coroutine scope
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    // State to control visibility of the bottom sheet
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             NotificationsInboxTopBar(navController)
         },
         bottomBar = {
-            BottomNavigationBar(navController, currentRoute = currentRoute)
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                onCreateClick = {
+                    showBottomSheet = true // Trigger bottom sheet visibility
+                }
+            )
         }
     ) {
         // Added padding for spacing between the top bar and inbox list
         NotificationsInboxList(
             notifications = sampleInboxNotifications(),
-            modifier = Modifier.padding(top = 36.dp) // Padding to create space between top bar and list
+            modifier = Modifier
+                .padding(top = 36.dp) // Padding to create space between top bar and list
+        )
+
+        // Use the extracted BottomSheetContent composable
+        BottomSheetContent(
+            sheetState = sheetState,
+            showBottomSheet = showBottomSheet,
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                }.invokeOnCompletion {
+                    if (!sheetState.isVisible) {
+                        showBottomSheet = false
+                    }
+                }
+            }
         )
     }
 }
@@ -852,23 +1064,54 @@ fun sampleInboxNotifications(): List<NotificationItem> {
 @Composable
 fun NotificationsInboxScreenPreview() {
     val mockNavController = rememberNavController() // A mock NavController for preview purposes
-    SearchUI(navController = mockNavController) // Directly preview the SearchUI
+    NotificationsInboxScreen(navController = mockNavController) // Directly preview the SearchUI
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedScreenPins(navController: NavController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
+
+    // Remember bottom sheet state and coroutine scope
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    // State to control visibility of the bottom sheet
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             SavedPinsTopBar(navController)
         },
         bottomBar = {
-            BottomNavigationBar(navController, currentRoute = currentRoute)
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                onCreateClick = {
+                    showBottomSheet = true // Trigger bottom sheet visibility
+                }
+            )
         }
     ) {
+        // Saved boards content display
         SavedBoardsContent()
+
+        // Use the extracted BottomSheetContent composable
+        BottomSheetContent(
+            sheetState = sheetState,
+            showBottomSheet = showBottomSheet,
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                }.invokeOnCompletion {
+                    if (!sheetState.isVisible) {
+                        showBottomSheet = false
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -957,21 +1200,52 @@ fun SavedScreenPinsPreview() {
     SavedScreenPins(navController = mockNavController)
 }
 
-//
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedScreenBoards(navController: NavController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
+
+    // Remember bottom sheet state and coroutine scope
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    // State to control visibility of the bottom sheet
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             SavedBoardsTopBar(navController)
         },
         bottomBar = {
-            BottomNavigationBar(navController, currentRoute = currentRoute)
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                onCreateClick = {
+                    showBottomSheet = true // Trigger bottom sheet visibility
+                }
+            )
         }
     ) {
+        // Saved boards content display
         SavedBoardsContent()
+
+        // Use the BottomSheetContent composable
+        BottomSheetContent(
+            sheetState = sheetState,
+            showBottomSheet = showBottomSheet,
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                }.invokeOnCompletion {
+                    if (!sheetState.isVisible) {
+                        showBottomSheet = false
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -1108,16 +1382,16 @@ fun AccountScreen(navController: NavController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
     Scaffold(
-        bottomBar = {
-            BottomNavigationBar(navController, currentRoute = currentRoute)  // Adding the bottom navigation bar
-        }
+//        bottomBar = {
+//            BottomNavigationBar(navController, currentRoute = currentRoute)  // Adding the bottom navigation bar
+//        }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-// Title section
+            // Title section
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1240,9 +1514,9 @@ fun AvatarScreen(navController: NavController) {
                 }
             }
         },
-        bottomBar = {
-            BottomNavigationBar(navController, currentRoute = currentRoute)  // Adding the bottom navigation bar
-        }
+//        bottomBar = {
+//            BottomNavigationBar(navController, currentRoute = currentRoute)  // Adding the bottom navigation bar
+//        }
     ) {
         Column(
             modifier = Modifier
@@ -1306,7 +1580,8 @@ fun AvatarScreen(navController: NavController) {
             // Edit profile button
             Button(
                 onClick = {
-                    // Handle edit profile action
+                    // Navigate to Profile Screen when clicked
+                    navController.navigate("profile")
                 },
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
@@ -1325,4 +1600,327 @@ fun AvatarScreen(navController: NavController) {
 fun AvatarScreenPreview() {
     val mockNavController = rememberNavController() // Mock NavController for preview purposes
     AvatarScreen(navController = mockNavController)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomSheetContent(
+    sheetState: SheetState,
+    showBottomSheet: Boolean,
+    onDismissRequest: () -> Unit
+) {
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = onDismissRequest,
+            sheetState = sheetState
+        ) {
+            // Bottom sheet content
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Row containing cross icon and text
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    // Cross icon button on the left
+                    IconButton(onClick = onDismissRequest) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+
+                    // Text centered in the row
+                    Text(
+                        text = "Start creating now",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.weight(1f).padding(start = 24.dp), // Takes up remaining space to center the text
+                        //textAlign = TextAlign.Center
+                    )
+                }
+
+                // Add Spacer here to shift the content below down
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Content with pin, camera, and board options
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        IconButton(onClick = { /* Handle Pin action */ }) {
+                            Icon(Icons.Default.Add, contentDescription = "Pin")
+                        }
+                        Text("Pin")
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        IconButton(onClick = { /* Handle Camera action */ }) {
+                            Icon(Icons.Rounded.CameraAlt, contentDescription = "Camera")
+                        }
+                        Text("Camera")
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        IconButton(onClick = { /* Handle Board action */ }) {
+                            Icon(Icons.Default.AddChart, contentDescription = "Board")
+                        }
+                        Text("Board")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ImageDetailScreen(navController: NavController) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* TODO: Implement share functionality */ }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share")
+                    }
+                }
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Display the main image
+            Image(
+                painter = painterResource(id = R.drawable.image1), // Replace with actual image resource
+                contentDescription = "Main Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // User row with image and name
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // User Profile Image
+                Image(
+                    painter = painterResource(id = R.drawable.image1), // Replace with actual profile image resource
+                    contentDescription = "User Profile",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Username
+                Text(text = "Mr Bigtime", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Buttons Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween // Space between buttons
+            ) {
+                // "View" Button
+                Button(
+                    onClick = { /* TODO: Implement view functionality */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
+                    modifier = Modifier.weight(1f) // Adjust button width
+                ) {
+                    Text(
+                        text = "View",
+                        color = Color.Black // Set text color to black
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp)) // Space between buttons
+
+                // "Save" Button
+                Button(
+                    onClick = { /* TODO: Implement save functionality */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier.weight(1f) // Adjust button width
+                ) {
+                    Text(text = "Save")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Comments Section
+            Text(
+                text = "2 comments",
+                modifier = Modifier.padding(horizontal = 16.dp),
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "josian ... view all",
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Like and other actions row (like count, etc.)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { /* TODO: Implement like functionality */ }) {
+                    Icon(Icons.Default.FavoriteBorder, contentDescription = "Like")
+                }
+
+                Text(text = "24")
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ImageDetailScreenPreview() {
+    val mockNavController = rememberNavController() // Mock NavController for preview purposes
+    ImageDetailScreen(navController = mockNavController)
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun EditProfileScreen(navController: NavController) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Edit Profile",
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp)
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    Button(
+                        onClick = { /* TODO: Implement done functionality */ },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        modifier = Modifier.padding(end = 8.dp) // Padding to adjust positioning
+                    ) {
+                        Text("Done", color = Color.White)
+                    }
+                }
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Space between the TopAppBar and the content
+            Spacer(modifier = Modifier.height(50.dp))
+
+            // Display helper text above the avatar
+            Text(
+                text = "Keep your personal details private.\nInformation you add here is visible to anyone who can view your profile.",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Profile Picture (Avatar)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF6200EA))
+            ) {
+                Text(text = "F", fontSize = 48.sp, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp)) // Space between Avatar and Edit button
+
+            // Edit Button (Below Avatar Image)
+            Button(
+                onClick = { /* TODO: Implement edit profile picture */ },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+            ) {
+                Text(text = "Edit", color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp)) // Spacing between the button and input fields
+
+            // First Name Input
+            OutlinedTextField(
+                value = "Farhan",
+                onValueChange = { /* TODO: Handle first name change */ },
+                label = { Text("First name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Last Name Input
+            OutlinedTextField(
+                value = "Khan",
+                onValueChange = { /* TODO: Handle last name change */ },
+                label = { Text("Last name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Username Input
+            OutlinedTextField(
+                value = "farhankhanfk2003",
+                onValueChange = { /* TODO: Handle username change */ },
+                label = { Text("Username") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun EditProfileScreenPreview() {
+    val mockNavController = rememberNavController() // Mock NavController for preview purposes
+    EditProfileScreen(navController = mockNavController)
 }
