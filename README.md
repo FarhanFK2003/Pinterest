@@ -1,5 +1,7 @@
 # Pinterest
 
+# Week 1
+
 **Project Overview**
 
 I built this project as a basic Pinterest clone using Jetpack Compose to practice UI development and layout design. The app features a login screen with social media sign-in options, a home screen that displays a grid of images, and a saved screen where users can search for their saved pins. This project is focused on the front-end aspect, specifically on creating visually appealing layouts, and does not currently include any backend logic or data storage.
@@ -57,3 +59,11 @@ Another goal is to enhance responsiveness and design for different device sizes 
 
 
 This project represents my journey in learning Jetpack Compose and building modern Android UIs. The focus is on structure and UI design, laying the foundation for future developments.
+
+# Week 2
+
+Added Navigation for the 8 screens of the App.
+
+# Week 3
+
+Implemented Bottom Sheet and Updated Navigation for all the screens of the App.
