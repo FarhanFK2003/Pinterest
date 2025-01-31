@@ -67,3 +67,11 @@ Added Navigation for the 8 screens of the App.
 # Week 3
 
 Implemented Bottom Sheet and Updated Navigation for all the screens of the App.
+
+# Week 4
+
+Implemented Authorization and Authentication of the Users with the Google Firebase.
+
+# Week 5
+
+Successfully Completed Backend with realtime database using Google Firebase.
