@@ -3,6 +3,7 @@
 package com.example.pinterest
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -33,37 +34,41 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddChart
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -189,6 +194,24 @@ class RealtimeDatabaseRepository : DatabaseRepository {
                 onFailure(exception)
                 Log.e("RealtimeDatabaseRepository", "Error fetching images from database: ${exception.message}", exception)
             }
+//        database.child("images").get()
+//            .addOnSuccessListener { snapshot ->
+//                val tempList = mutableListOf<Image>()
+//                snapshot.children.forEach { imageSnapshot ->
+//                    try {
+//                        val image = imageSnapshot.getValue(Image::class.java)
+//                        if (image != null) {
+//                            tempList.add(image)
+//                        }
+//                    } catch (e: Exception) {
+//                        Log.e("FirebaseError", "Error parsing image: ${e.message}")
+//                    }
+//                }
+//                // Use tempList for further operations
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("FirebaseError", "Error fetching images: ${exception.message}")
+//            }
     }
 
     override fun addImage(
@@ -215,13 +238,25 @@ class RealtimeDatabaseRepository : DatabaseRepository {
     }
 }
 
+//data class Image(
+//    val id: String = "",
+//    val image_url: String = "",
+//    val title: String = "",
+//    val description: String = "",
+//    val category: String = "",
+//    val user_id: String = ""
+//)
+
 data class Image(
     val id: String = "",
     val image_url: String = "",
     val title: String = "",
     val description: String = "",
     val category: String = "",
-    val user_id: String = ""
+    val user_id: String = "",
+    var likes: Int = 0,
+    var isLiked: Boolean = false // New field
+
 )
 
 fun uploadImage(
@@ -1107,6 +1142,8 @@ fun PinterestUIPreview() {
 //    }
 //}
 
+
+//Original1
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1136,7 +1173,7 @@ fun HomeScreen(navController: NavController, repository: DatabaseRepository) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(30.dp),
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -1188,7 +1225,13 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?, onC
                     popUpTo(navController.graph.startDestinationId)
                     launchSingleTop = true
                 }
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.Red,
+                selectedTextColor = Color.Red,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
         )
         NavigationBarItem(
             icon = {
@@ -1203,7 +1246,13 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?, onC
                     popUpTo(navController.graph.startDestinationId)
                     launchSingleTop = true
                 }
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.Red,
+                selectedTextColor = Color.Red,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
         )
         NavigationBarItem(
             icon = {
@@ -1215,14 +1264,20 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?, onC
             selected = false,
             onClick = {
                 onCreateClick() // Call the lambda to trigger bottom sheet
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.Red,
+                selectedTextColor = Color.Red,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
         )
         NavigationBarItem(
             icon = {
                 Icon(Icons.Default.Notifications, contentDescription = "Notifications")
             },
             label = {
-                Text(text = "Notifications")
+                Text(text = "Notifica...")
             },
             selected = currentRoute == "notifications",
             onClick = {
@@ -1230,7 +1285,13 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?, onC
                     popUpTo(navController.graph.startDestinationId)
                     launchSingleTop = true
                 }
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.Red,
+                selectedTextColor = Color.Red,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
         )
         NavigationBarItem(
             icon = {
@@ -1245,7 +1306,13 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?, onC
                     popUpTo(navController.graph.startDestinationId)
                     launchSingleTop = true
                 }
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.Red,
+                selectedTextColor = Color.Red,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
         )
     }
 }
@@ -1391,6 +1458,7 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?, onC
 //    }
 //}
 
+//Original1
 @Composable
 fun ImagesGrid(navController: NavController, repository: DatabaseRepository) {
     var images by remember { mutableStateOf<List<Image>>(emptyList()) }
@@ -1415,7 +1483,7 @@ fun ImagesGrid(navController: NavController, repository: DatabaseRepository) {
     } else {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(0.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
@@ -1584,6 +1652,7 @@ fun ImagesGrid(navController: NavController, repository: DatabaseRepository) {
 //    }
 //}
 
+//Original1
 @Composable
 fun ImageCard(image: Image, navController: NavController) {
     val gson = Gson() // Initialize Gson instance
@@ -1591,7 +1660,7 @@ fun ImageCard(image: Image, navController: NavController) {
     Card(
         modifier = Modifier
             .size(150.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(16.dp))
             .clickable {
                 // Serialize the image object to a JSON string
                 val imageJson = gson.toJson(image)
@@ -1761,6 +1830,7 @@ fun SearchUI(navController: NavController, database: DatabaseReference) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { query -> searchQuery = query },
+                singleLine = true,
                 label = { Text(text = "Search for Ideas") },
                 leadingIcon = {
                     Icon(
@@ -2300,7 +2370,7 @@ fun HomeScreenPreview() {
 //    }
 //}
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(navController: NavController, database: DatabaseReference) {
@@ -2881,146 +2951,147 @@ fun NotificationsInboxScreenPreview() {
 //    )
 //}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-fun SavedScreenPins(navController: NavController, auth: FirebaseAuth, database: DatabaseReference) {
-    val currentUser = auth.currentUser
-    var savedImages by remember { mutableStateOf<List<Image>>(emptyList()) }
-    var filteredImages by remember { mutableStateOf<List<Image>>(emptyList()) }
-    var searchQuery by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
-    val currentBackStackEntry = navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry.value?.destination?.route
-
-    // Remember bottom sheet state and coroutine scope
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
-
-    // State to control visibility of the bottom sheet
-    var showBottomSheet by remember { mutableStateOf(false) }
-
-    // Fetch saved images from Firebase
-    LaunchedEffect(currentUser) {
-        currentUser?.let { user ->
-            val userId = user.uid
-            database.child("users").child(userId).child("saved_images").get()
-                .addOnSuccessListener { snapshot ->
-                    val imagesList = mutableListOf<Image>()
-                    snapshot.children.forEach { child ->
-                        val image = child.getValue(Image::class.java)
-                        if (image != null) {
-                            imagesList.add(image)
-                        }
-                    }
-                    savedImages = imagesList
-                    filteredImages = imagesList // Initially show all images
-                }
-                .addOnFailureListener {
-                    errorMessage = "Failed to load saved images."
-                }
-        }
-    }
-
-    // Filter images based on search query
-    LaunchedEffect(searchQuery, savedImages) {
-        if (searchQuery.isEmpty()) {
-            filteredImages = savedImages
-        } else {
-            filteredImages = savedImages.filter { image ->
-                image.title.contains(searchQuery, ignoreCase = true) ||
-                        image.category.contains(searchQuery, ignoreCase = true)
-            }
-        }
-    }
-
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar(
-                navController = navController,
-                currentRoute = currentRoute,
-                onCreateClick = { showBottomSheet = true }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Top bar with search bar included
-            SavedPinsTopBar(navController = navController, auth = auth, database = database)
-
-            // Search bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { query -> searchQuery = query },
-                label = { Text(text = "Search your Pins") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search Icon"
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Red,
-                    unfocusedBorderColor = Color.Gray,
-                    cursorColor = Color.Red
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Check if there are any errors to display
-            if (errorMessage.isNotEmpty()) {
-                Text(
-                    text = errorMessage,
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp)
-                )
-            } else if (filteredImages.isEmpty()) {
-                Text(
-                    text = "No pins found.",
-                    color = Color.Gray,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(filteredImages) { image ->
-                        ImageCard(image = image, navController = navController)
-                    }
-                }
-            }
-        }
-    }
-
-    // Use the extracted BottomSheetContent composable
-    BottomSheetContent(
-        sheetState = sheetState,
-        showBottomSheet = showBottomSheet,
-        onDismissRequest = {
-            scope.launch {
-                sheetState.hide()
-            }.invokeOnCompletion {
-                if (!sheetState.isVisible) {
-                    showBottomSheet = false
-                }
-            }
-        }
-    )
-}
+//Original1
+//@OptIn(ExperimentalMaterial3Api::class)
+//@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
+//@Composable
+//fun SavedScreenPins(navController: NavController, auth: FirebaseAuth, database: DatabaseReference) {
+//    val currentUser = auth.currentUser
+//    var savedImages by remember { mutableStateOf<List<Image>>(emptyList()) }
+//    var filteredImages by remember { mutableStateOf<List<Image>>(emptyList()) }
+//    var searchQuery by remember { mutableStateOf("") }
+//    var errorMessage by remember { mutableStateOf("") }
+//    val currentBackStackEntry = navController.currentBackStackEntryAsState()
+//    val currentRoute = currentBackStackEntry.value?.destination?.route
+//
+//    // Remember bottom sheet state and coroutine scope
+//    val sheetState = rememberModalBottomSheetState()
+//    val scope = rememberCoroutineScope()
+//
+//    // State to control visibility of the bottom sheet
+//    var showBottomSheet by remember { mutableStateOf(false) }
+//
+//    // Fetch saved images from Firebase
+//    LaunchedEffect(currentUser) {
+//        currentUser?.let { user ->
+//            val userId = user.uid
+//            database.child("users").child(userId).child("saved_images").get()
+//                .addOnSuccessListener { snapshot ->
+//                    val imagesList = mutableListOf<Image>()
+//                    snapshot.children.forEach { child ->
+//                        val image = child.getValue(Image::class.java)
+//                        if (image != null) {
+//                            imagesList.add(image)
+//                        }
+//                    }
+//                    savedImages = imagesList
+//                    filteredImages = imagesList // Initially show all images
+//                }
+//                .addOnFailureListener {
+//                    errorMessage = "Failed to load saved images."
+//                }
+//        }
+//    }
+//
+//    // Filter images based on search query
+//    LaunchedEffect(searchQuery, savedImages) {
+//        if (searchQuery.isEmpty()) {
+//            filteredImages = savedImages
+//        } else {
+//            filteredImages = savedImages.filter { image ->
+//                image.title.contains(searchQuery, ignoreCase = true) ||
+//                        image.category.contains(searchQuery, ignoreCase = true)
+//            }
+//        }
+//    }
+//
+//    Scaffold(
+//        bottomBar = {
+//            BottomNavigationBar(
+//                navController = navController,
+//                currentRoute = currentRoute,
+//                onCreateClick = { showBottomSheet = true }
+//            )
+//        }
+//    ) { paddingValues ->
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(paddingValues)
+//        ) {
+//            // Top bar with search bar included
+//            SavedPinsTopBar(navController = navController, auth = auth, database = database)
+//
+//            // Search bar
+//            OutlinedTextField(
+//                value = searchQuery,
+//                onValueChange = { query -> searchQuery = query },
+//                label = { Text(text = "Search your Pins") },
+//                leadingIcon = {
+//                    Icon(
+//                        imageVector = Icons.Default.Search,
+//                        contentDescription = "Search Icon"
+//                    )
+//                },
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 16.dp, vertical = 8.dp),
+//                colors = OutlinedTextFieldDefaults.colors(
+//                    focusedBorderColor = Color.Red,
+//                    unfocusedBorderColor = Color.Gray,
+//                    cursorColor = Color.Red
+//                )
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Check if there are any errors to display
+//            if (errorMessage.isNotEmpty()) {
+//                Text(
+//                    text = errorMessage,
+//                    color = Color.Red,
+//                    modifier = Modifier.padding(16.dp)
+//                )
+//            } else if (filteredImages.isEmpty()) {
+//                Text(
+//                    text = "No pins found.",
+//                    color = Color.Gray,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(16.dp),
+//                    textAlign = TextAlign.Center
+//                )
+//            } else {
+//                LazyVerticalGrid(
+//                    columns = GridCells.Fixed(2),
+//                    contentPadding = PaddingValues(16.dp),
+//                    verticalArrangement = Arrangement.spacedBy(16.dp),
+//                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+//                    modifier = Modifier.fillMaxSize()
+//                ) {
+//                    items(filteredImages) { image ->
+//                        ImageCard(image = image, navController = navController)
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    // Use the extracted BottomSheetContent composable
+//    BottomSheetContent(
+//        sheetState = sheetState,
+//        showBottomSheet = showBottomSheet,
+//        onDismissRequest = {
+//            scope.launch {
+//                sheetState.hide()
+//            }.invokeOnCompletion {
+//                if (!sheetState.isVisible) {
+//                    showBottomSheet = false
+//                }
+//            }
+//        }
+//    )
+//}
 
 
 //@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -3444,6 +3515,7 @@ fun SavedScreenBoards(navController: NavController, auth: FirebaseAuth, database
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
+                singleLine = true,
                 label = { Text(text = "Search your Boards") },
                 leadingIcon = {
                     Icon(
@@ -3975,114 +4047,116 @@ fun SavedBoardsTopBar(navController: NavController, auth: FirebaseAuth, database
 //    }
 //}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BottomSheetContent(
-    sheetState: SheetState,
-    showBottomSheet: Boolean,
-    onDismissRequest: () -> Unit
-) {
-    val context = LocalContext.current
-    val activity = context as? ComponentActivity
 
-    // Remember the image URI to store the captured image
-    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
-
-    // Create an ActivityResultLauncher for the camera
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-        onResult = { success ->
-            if (success) {
-                Toast.makeText(context, "Image captured!", Toast.LENGTH_SHORT).show()
-                // Handle the captured image URI (e.g., upload to database or display)
-                capturedImageUri?.let { uri ->
-                    Log.d("Camera", "Captured Image URI: $uri")
-                    // Here you can upload the image to Firebase
-                }
-            } else {
-                Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
-            }
-        }
-    )
-
-    // Function to launch the camera
-    fun openCamera() {
-        val imageFile = File(context.cacheDir, "captured_image_${System.currentTimeMillis()}.jpg")
-        capturedImageUri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.provider", // Ensure this matches your Manifest provider authority
-            imageFile
-        )
-
-        // Use a local variable to safely launch the camera
-        val uri = capturedImageUri
-        if (uri != null) {
-            cameraLauncher.launch(uri)
-        } else {
-            Toast.makeText(context, "Failed to create image file", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            onDismissRequest = onDismissRequest,
-            sheetState = sheetState
-        ) {
-            // Bottom sheet content
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    IconButton(onClick = onDismissRequest) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
-                    }
-                    Text(
-                        text = "Start creating now",
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 24.dp),
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Pin, Camera, Board options
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        IconButton(onClick = { /* Handle Pin action */ }) {
-                            Icon(Icons.Default.Add, contentDescription = "Pin")
-                        }
-                        Text("Pin")
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        IconButton(onClick = { openCamera() }) { // Call openCamera function here
-                            Icon(Icons.Rounded.CameraAlt, contentDescription = "Camera")
-                        }
-                        Text("Camera")
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        IconButton(onClick = { /* Handle Board action */ }) {
-                            Icon(Icons.Default.AddChart, contentDescription = "Board")
-                        }
-                        Text("Board")
-                    }
-                }
-            }
-        }
-    }
-}
+//Original1
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun BottomSheetContent(
+//    sheetState: SheetState,
+//    showBottomSheet: Boolean,
+//    onDismissRequest: () -> Unit
+//) {
+//    val context = LocalContext.current
+//    val activity = context as? ComponentActivity
+//
+//    // Remember the image URI to store the captured image
+//    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
+//
+//    // Create an ActivityResultLauncher for the camera
+//    val cameraLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.TakePicture(),
+//        onResult = { success ->
+//            if (success) {
+//                Toast.makeText(context, "Image captured!", Toast.LENGTH_SHORT).show()
+//                // Handle the captured image URI (e.g., upload to database or display)
+//                capturedImageUri?.let { uri ->
+//                    Log.d("Camera", "Captured Image URI: $uri")
+//                    // Here you can upload the image to Firebase
+//                }
+//            } else {
+//                Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//    )
+//
+//    // Function to launch the camera
+//    fun openCamera() {
+//        val imageFile = File(context.cacheDir, "captured_image_${System.currentTimeMillis()}.jpg")
+//        capturedImageUri = FileProvider.getUriForFile(
+//            context,
+//            "${context.packageName}.provider", // Ensure this matches your Manifest provider authority
+//            imageFile
+//        )
+//
+//        // Use a local variable to safely launch the camera
+//        val uri = capturedImageUri
+//        if (uri != null) {
+//            cameraLauncher.launch(uri)
+//        } else {
+//            Toast.makeText(context, "Failed to create image file", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//
+//
+//    if (showBottomSheet) {
+//        ModalBottomSheet(
+//            onDismissRequest = onDismissRequest,
+//            sheetState = sheetState
+//        ) {
+//            // Bottom sheet content
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(16.dp),
+//                verticalArrangement = Arrangement.spacedBy(8.dp)
+//            ) {
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.Start
+//                ) {
+//                    IconButton(onClick = onDismissRequest) {
+//                        Icon(Icons.Default.Close, contentDescription = "Close")
+//                    }
+//                    Text(
+//                        text = "Start creating now",
+//                        style = MaterialTheme.typography.headlineSmall,
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .padding(start = 24.dp),
+//                    )
+//                }
+//
+//                Spacer(modifier = Modifier.height(8.dp))
+//
+//                // Pin, Camera, Board options
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceEvenly
+//                ) {
+//                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                        IconButton(onClick = { /* Handle Pin action */ }) {
+//                            Icon(Icons.Default.Add, contentDescription = "Pin")
+//                        }
+//                        Text("Pin")
+//                    }
+//                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                        IconButton(onClick = { openCamera() }) { // Call openCamera function here
+//                            Icon(Icons.Rounded.CameraAlt, contentDescription = "Camera")
+//                        }
+//                        Text("Camera")
+//                    }
+//                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                        IconButton(onClick = { /* Handle Board action */ }) {
+//                            Icon(Icons.Default.AddChart, contentDescription = "Board")
+//                        }
+//                        Text("Board")
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 
 
 
@@ -4776,147 +4850,147 @@ fun BottomSheetContent(
 //    }
 //}
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-fun ImageDetailScreen(navController: NavController, image: Image, auth: FirebaseAuth, database: DatabaseReference) {
-    val currentUser = auth.currentUser
-    var isSaved by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
-
-    // Check if the image is already saved when the screen loads
-    LaunchedEffect(currentUser) {
-        currentUser?.let { user ->
-            val userId = user.uid
-            database.child("users").child(userId).child("saved_images").child(image.id).get()
-                .addOnSuccessListener { snapshot ->
-                    if (snapshot.exists()) {
-                        isSaved = true // Mark the image as saved if it exists in Firebase
-                    }
-                }
-                .addOnFailureListener {
-                    errorMessage = "Failed to check saved status."
-                }
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(start = 16.dp)
-//                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Image Details",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            // Display the main image
-            Image(
-                painter = rememberAsyncImagePainter(
-                    model = image.image_url,
-                    placeholder = painterResource(id = R.drawable.placeholder),
-                    error = painterResource(id = R.drawable.error)
-                ),
-                contentDescription = image.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(500.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Title
-            Text(
-                text = image.title,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Description
-            Text(
-                text = image.description,
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // User ID
-            Text(
-                text = "Uploaded by User ID: ${image.user_id}",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Save Button
-            Button(
-                onClick = {
-                    currentUser?.let { user ->
-                        val userId = user.uid
-                        database.child("users").child(userId).child("saved_images").child(image.id).setValue(image)
-                            .addOnSuccessListener {
-                                isSaved = true // Update the button state to "Saved"
-                                Toast.makeText(navController.context, "Image saved!", Toast.LENGTH_SHORT).show()
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(navController.context, "Failed to save image.", Toast.LENGTH_SHORT).show()
-                            }
-                    }
-                    saveImageToBoard(
-                        image = image,
-                        auth = auth,
-                        database = database,
-                        onSuccess = {
-                            Toast.makeText(navController.context, "Image saved to board!", Toast.LENGTH_SHORT).show()
-                        },
-                        onFailure = { error ->
-                            Toast.makeText(navController.context, "Failed to save image: $error", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth(0.5f)
-                    .height(48.dp),
-                enabled = !isSaved, // Disable the button if the image is already saved
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isSaved) Color.Gray else Color.Red
-                )
-            ) {
-                Text(text = if (isSaved) "Saved" else "Save", color = Color.White)
-            }
-
-            if (errorMessage.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(text = errorMessage, color = Color.Red)
-            }
-        }
-    }
-}
+//Original
+//@OptIn(ExperimentalMaterial3Api::class)
+//@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
+//@Composable
+//fun ImageDetailScreen(navController: NavController, image: Image, auth: FirebaseAuth, database: DatabaseReference) {
+//    val currentUser = auth.currentUser
+//    var isSaved by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf("") }
+//
+//    // Check if the image is already saved when the screen loads
+//    LaunchedEffect(currentUser) {
+//        currentUser?.let { user ->
+//            val userId = user.uid
+//            database.child("users").child(userId).child("saved_images").child(image.id).get()
+//                .addOnSuccessListener { snapshot ->
+//                    if (snapshot.exists()) {
+//                        isSaved = true // Mark the image as saved if it exists in Firebase
+//                    }
+//                }
+//                .addOnFailureListener {
+//                    errorMessage = "Failed to check saved status."
+//                }
+//        }
+//    }
+//
+//    Scaffold(
+//        topBar = {
+//            TopAppBar(
+//                title = {
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth()
+//                            .padding(start = 16.dp)
+////                        horizontalArrangement = Arrangement.Center
+//                    ) {
+//                        Text(
+//                            text = "Image Details",
+//                            fontWeight = FontWeight.Bold
+//                        )
+//                    }
+//                },
+//                navigationIcon = {
+//                    IconButton(onClick = { navController.popBackStack() }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+//                }
+//            )
+//        }
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .verticalScroll(rememberScrollState())
+//                .padding(16.dp)
+//        ) {
+//            // Display the main image
+//            Image(
+//                painter = rememberAsyncImagePainter(
+//                    model = image.image_url,
+//                    placeholder = painterResource(id = R.drawable.placeholder),
+//                    error = painterResource(id = R.drawable.error)
+//                ),
+//                contentDescription = image.title,
+//                contentScale = ContentScale.Crop,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(500.dp)
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Title
+//            Text(
+//                text = image.title,
+//                fontSize = 24.sp,
+//                fontWeight = FontWeight.Bold
+//            )
+//
+//            Spacer(modifier = Modifier.height(8.dp))
+//
+//            // Description
+//            Text(
+//                text = image.description,
+//                style = MaterialTheme.typography.bodyMedium
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // User ID
+//            Text(
+//                text = "Uploaded by User ID: ${image.user_id}",
+//                fontSize = 14.sp,
+//                color = Color.Gray
+//            )
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+//
+//            // Save Button
+//            Button(
+//                onClick = {
+//                    currentUser?.let { user ->
+//                        val userId = user.uid
+//                        database.child("users").child(userId).child("saved_images").child(image.id).setValue(image)
+//                            .addOnSuccessListener {
+//                                isSaved = true // Update the button state to "Saved"
+//                                Toast.makeText(navController.context, "Image saved!", Toast.LENGTH_SHORT).show()
+//                            }
+//                            .addOnFailureListener {
+//                                Toast.makeText(navController.context, "Failed to save image.", Toast.LENGTH_SHORT).show()
+//                            }
+//                    }
+//                    saveImageToBoard(
+//                        image = image,
+//                        auth = auth,
+//                        database = database,
+//                        onSuccess = {
+//                            Toast.makeText(navController.context, "Image saved to board!", Toast.LENGTH_SHORT).show()
+//                        },
+//                        onFailure = { error ->
+//                            Toast.makeText(navController.context, "Failed to save image: $error", Toast.LENGTH_SHORT).show()
+//                        }
+//                    )
+//                },
+//                modifier = Modifier
+//                    .align(Alignment.CenterHorizontally)
+//                    .fillMaxWidth(0.5f)
+//                    .height(48.dp),
+//                enabled = !isSaved, // Disable the button if the image is already saved
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = if (isSaved) Color.Gray else Color.Red
+//                )
+//            ) {
+//                Text(text = if (isSaved) "Saved" else "Save", color = Color.White)
+//            }
+//
+//            if (errorMessage.isNotEmpty()) {
+//                Spacer(modifier = Modifier.height(16.dp))
+//                Text(text = errorMessage, color = Color.Red)
+//            }
+//        }
+//    }
+//}
 
 
 
@@ -5241,7 +5315,12 @@ fun LoginScreen(navController: NavController, auth: FirebaseAuth) {
                 modifier = Modifier
                     .width(300.dp)
                     .padding(bottom = 16.dp),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Red,
+                    unfocusedBorderColor = Color.Gray,
+                    cursorColor = Color.Red
+                )
             )
 
             // Password Input Field
@@ -5253,7 +5332,13 @@ fun LoginScreen(navController: NavController, auth: FirebaseAuth) {
                 modifier = Modifier
                     .width(300.dp)
                     .padding(bottom = 16.dp),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password)
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Red,
+                    unfocusedBorderColor = Color.Gray,
+                    cursorColor = Color.Red
+                )
+
             )
 
             // Show Error Message
@@ -5399,7 +5484,12 @@ fun SignupScreen(navController: NavController, auth: FirebaseAuth, database: Dat
                 singleLine = true,
                 modifier = Modifier
                     .width(300.dp)
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Red,
+                    unfocusedBorderColor = Color.Gray,
+                    cursorColor = Color.Red
+                )
             )
 
             // Email Input Field
@@ -5411,7 +5501,12 @@ fun SignupScreen(navController: NavController, auth: FirebaseAuth, database: Dat
                 modifier = Modifier
                     .width(300.dp)
                     .padding(bottom = 16.dp),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Red,
+                    unfocusedBorderColor = Color.Gray,
+                    cursorColor = Color.Red
+                )
             )
 
             // Password Input Field
@@ -5423,7 +5518,12 @@ fun SignupScreen(navController: NavController, auth: FirebaseAuth, database: Dat
                 modifier = Modifier
                     .width(300.dp)
                     .padding(bottom = 16.dp),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password)
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Red,
+                    unfocusedBorderColor = Color.Gray,
+                    cursorColor = Color.Red
+                )
             )
 
             // Show Error Message
@@ -5483,7 +5583,7 @@ fun SignupScreen(navController: NavController, auth: FirebaseAuth, database: Dat
                 modifier = Modifier
                     .width(300.dp)
                     .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1877F2))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000))
             ) {
                 Text(text = "Sign Up", color = Color.White)
             }
@@ -5826,6 +5926,7 @@ fun EditProfileScreen(navController: NavController, auth: FirebaseAuth) {
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
+                singleLine = true,
                 label = { Text("Username") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -5874,11 +5975,783 @@ fun EditProfileScreen(navController: NavController, auth: FirebaseAuth) {
     }
 }
 
-@Preview(showBackground = true)
+
+
+
+//@OptIn(ExperimentalMaterial3Api::class)
+//@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
+//@Composable
+//fun ImageDetailScreen(
+//    navController: NavController,
+//    image: Image,
+//    auth: FirebaseAuth,
+//    database: DatabaseReference
+//) {
+//    val currentUser = auth.currentUser
+//    var likesCount by remember { mutableStateOf(image.likes) } // Use the likes count from the database
+//    var isLiked by remember { mutableStateOf(false) }
+//    var isSaved by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf("") }
+//
+//    // Load initial like status and likes count
+//    LaunchedEffect(Unit) {
+//        currentUser?.let { user ->
+//            val userId = user.uid
+//
+//            // Fetch updated likes count from Firebase
+//            database.child("images").child(image.id).child("likes").get()
+//                .addOnSuccessListener { snapshot ->
+//                    likesCount = snapshot.getValue(Int::class.java) ?: image.likes
+//                }
+//                .addOnFailureListener {
+//                    errorMessage = "Failed to fetch likes count."
+//                }
+//
+//            // Check if the user has liked the image
+//            database.child("users").child(userId).child("liked_images").child(image.id).get()
+//                .addOnSuccessListener { snapshot ->
+//                    isLiked = snapshot.exists()
+//                }
+//                .addOnFailureListener {
+//                    errorMessage = "Failed to check like status."
+//                }
+//
+//            // Check if the image is already saved
+//            database.child("users").child(userId).child("saved_images").child(image.id).get()
+//                .addOnSuccessListener { snapshot ->
+//                    isSaved = snapshot.exists()
+//                }
+//                .addOnFailureListener {
+//                    errorMessage = "Failed to check save status."
+//                }
+//        }
+//    }
+//
+//    Scaffold(
+//        topBar = {
+//            TopAppBar(
+//                title = { Text(text = "Image Details") },
+//                navigationIcon = {
+//                    IconButton(onClick = { navController.popBackStack() }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+//                }
+//            )
+//        }
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .verticalScroll(rememberScrollState())
+//                .padding(16.dp)
+//        ) {
+//            // Display image
+//            Image(
+//                painter = rememberAsyncImagePainter(model = image.image_url),
+//                contentDescription = image.title,
+//                contentScale = ContentScale.Crop,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(300.dp)
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Title and description
+//            Text(text = image.title, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+//            Spacer(modifier = Modifier.height(8.dp))
+//            Text(text = image.description, style = MaterialTheme.typography.bodyMedium)
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // User ID
+//            Text(
+//                text = "Uploaded by User ID: ${image.user_id}",
+//                fontSize = 14.sp,
+//                color = Color.Gray
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Save Button
+//            Button(
+//                onClick = {
+//                    currentUser?.let { user ->
+//                        val userId = user.uid
+//                        database.child("users").child(userId).child("saved_images").child(image.id)
+//                            .setValue(image)
+//                            .addOnSuccessListener {
+//                                isSaved = true
+//                                Toast.makeText(navController.context, "Image saved!", Toast.LENGTH_SHORT).show()
+//                            }
+//                            .addOnFailureListener {
+//                                Toast.makeText(navController.context, "Failed to save image.", Toast.LENGTH_SHORT).show()
+//                            }
+//                    }
+//                },
+//                modifier = Modifier
+//                    .align(Alignment.CenterHorizontally)
+//                    .fillMaxWidth(0.5f)
+//                    .height(48.dp),
+//                enabled = !isSaved,
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = if (isSaved) Color.Gray else Color.Red
+//                )
+//            ) {
+//                Text(text = if (isSaved) "Saved" else "Save", color = Color.White)
+//            }
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Like Button and Count
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                IconButton(
+//                    onClick = {
+//                        currentUser?.let { user ->
+//                            val userId = user.uid
+//                            if (!isLiked) {
+//                                // User likes the image
+//                                likesCount += 1
+//                                isLiked = true
+//                                database.child("images").child("image${image.id}").child("likes")
+//                                    .setValue(likesCount)
+//                                    .addOnFailureListener {
+//                                        errorMessage = "Failed to update likes."
+//                                    }
+//
+//                                // Mark as liked for this user
+//                                database.child("users").child(userId).child("liked_images").child(image.id)
+//                                    .setValue(true)
+//                                    .addOnFailureListener {
+//                                        errorMessage = "Failed to mark like."
+//                                    }
+//                            } else {
+//                                // User dislikes the image
+//                                likesCount -= 1
+//                                isLiked = false
+//                                database.child("images").child("image${image.id}").child("likes")
+//                                    .setValue(likesCount)
+//                                    .addOnFailureListener {
+//                                        errorMessage = "Failed to update likes."
+//                                    }
+//
+//                                // Remove like mark for this user
+//                                database.child("users").child(userId).child("liked_images").child(image.id)
+//                                    .removeValue()
+//                                    .addOnFailureListener {
+//                                        errorMessage = "Failed to remove like mark."
+//                                    }
+//                            }
+//                        }
+//                    }
+//                ) {
+//                    Icon(
+//                        imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+//                        contentDescription = "Like",
+//                        tint = if (isLiked) Color.Red else Color.Gray
+//                    )
+//                }
+//                Text(text = "$likesCount likes", fontSize = 16.sp, color = Color.Gray)
+//            }
+//
+//            if (errorMessage.isNotEmpty()) {
+//                Spacer(modifier = Modifier.height(16.dp))
+//                Text(text = errorMessage, color = Color.Red)
+//            }
+//        }
+//    }
+//}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun EditProfileScreenPreview() {
-    val mockNavController = rememberNavController() // Mock NavController for preview purposes
-    val fakeAuth = FirebaseAuth.getInstance()
-    EditProfileScreen(navController = mockNavController, auth = fakeAuth)
+fun ImageDetailScreen(
+    navController: NavController,
+    image: Image,
+    auth: FirebaseAuth,
+    database: DatabaseReference
+) {
+    val currentUser = auth.currentUser
+    var likesCount by remember { mutableStateOf(image.likes) }
+    var isLiked by remember { mutableStateOf(false) }
+    var isSaved by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var newComment by remember { mutableStateOf("") }
+    var comments by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // Load initial data (likes, like status, save status, comments)
+    LaunchedEffect(Unit) {
+        currentUser?.let { user ->
+            val userId = user.uid
+
+            // Fetch likes count
+            database.child("images").child("image${image.id}").child("likes").get()
+                .addOnSuccessListener { snapshot ->
+                    likesCount = snapshot.getValue(Int::class.java) ?: image.likes
+                }
+                .addOnFailureListener {
+                    errorMessage = "Failed to fetch likes count."
+                }
+
+            // Check if user liked the image
+            database.child("users").child(userId).child("liked_images").child(image.id).get()
+                .addOnSuccessListener { snapshot ->
+                    isLiked = snapshot.exists()
+                }
+                .addOnFailureListener {
+                    errorMessage = "Failed to check like status."
+                }
+
+            // Check if image is saved
+            database.child("users").child(userId).child("saved_images").child(image.id).get()
+                .addOnSuccessListener { snapshot ->
+                    isSaved = snapshot.exists()
+                }
+                .addOnFailureListener {
+                    errorMessage = "Failed to check save status."
+                }
+
+            // Fetch comments
+            database.child("images").child("image${image.id}").child("comments").get()
+                .addOnSuccessListener { snapshot ->
+                    val fetchedComments = snapshot.children.mapNotNull { it.getValue(String::class.java) }
+                    comments = fetchedComments
+                }
+                .addOnFailureListener {
+                    errorMessage = "Failed to load comments."
+                }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Image Details") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            Surface( // Add a surface to set a white background
+                color = Color.White
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = newComment,
+                        onValueChange = { newComment = it },
+                        placeholder = { Text("Add a comment...") },
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(Color.White) // Ensure the text field background is white
+                    )
+                    IconButton(
+                        onClick = {
+                            if (newComment.isNotBlank()) {
+                                database.child("images").child("image${image.id}").child("comments").push()
+                                    .setValue(newComment)
+                                comments = comments + newComment
+                                newComment = ""
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Send, contentDescription = "Send")
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            contentPadding = innerPadding,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Image section
+            item {
+                Image(
+                    painter = rememberAsyncImagePainter(model = image.image_url),
+                    contentDescription = image.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)
+                )
+            }
+
+            // Title and description section
+            item {
+                Column {
+                    Text(text = image.title, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = image.description, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+
+            // User ID section
+            item {
+                Text(
+                    text = "Uploaded by User ID: ${image.user_id}",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
+
+            // Save Button section
+            item {
+                Button(
+                    onClick = {
+                        currentUser?.let { user ->
+                            val userId = user.uid
+                            database.child("users").child(userId).child("saved_images").child(image.id)
+                                .setValue(image)
+                                .addOnSuccessListener {
+                                    isSaved = true
+                                    Toast.makeText(navController.context, "Image saved!", Toast.LENGTH_SHORT).show()
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(navController.context, "Failed to save image.", Toast.LENGTH_SHORT).show()
+                                }
+                        }
+                            saveImageToBoard(
+                            image = image,
+                            auth = auth,
+                            database = database,
+                            onSuccess = {
+                                Toast.makeText(navController.context, "Image saved to board!", Toast.LENGTH_SHORT).show()
+                            },
+                            onFailure = { error ->
+                                Toast.makeText(navController.context, "Failed to save image: $error", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(start = 110.dp)
+                        .fillMaxWidth(0.5f)
+                        .height(48.dp),
+                    enabled = !isSaved,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isSaved) Color.Gray else Color.Red
+                    )
+                ) {
+                    Text(text = if (isSaved) "Saved" else "Save", color = Color.White)
+                }
+            }
+
+            // Like Button and Count section
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            currentUser?.let { user ->
+                                val userId = user.uid
+                                if (!isLiked) {
+                                    likesCount += 1
+                                    isLiked = true
+                                    database.child("images").child("image${image.id}").child("likes")
+                                        .setValue(likesCount)
+                                    database.child("users").child(userId).child("liked_images").child(image.id)
+                                        .setValue(true)
+                                } else {
+                                    likesCount -= 1
+                                    isLiked = false
+                                    database.child("images").child("image${image.id}").child("likes")
+                                        .setValue(likesCount)
+                                    database.child("users").child(userId).child("liked_images").child(image.id)
+                                        .removeValue()
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = "Like",
+                            tint = if (isLiked) Color.Red else Color.Gray
+                        )
+                    }
+                    Text(text = "$likesCount likes", fontSize = 16.sp, color = Color.Gray)
+                }
+            }
+
+            // Comments Section
+            item {
+                Text(text = "Comments", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                comments.forEach { comment ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Text(text = comment, fontSize = 14.sp)
+                        Divider(modifier = Modifier.padding(vertical = 4.dp))
+                    }
+                }
+            }
+
+            if (errorMessage.isNotEmpty()) {
+                item {
+                    Text(text = errorMessage, color = Color.Red)
+                }
+            }
+        }
+    }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun SavedScreenPins(navController: NavController, auth: FirebaseAuth, database: DatabaseReference) {
+    val currentUser = auth.currentUser
+    var savedImages by remember { mutableStateOf<List<Image>>(emptyList()) }
+    var filteredImages by remember { mutableStateOf<List<Image>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
+    val currentBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry.value?.destination?.route
+
+    // Bottom sheet state and coroutine scope
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    // Gallery picker launcher
+    val context = LocalContext.current
+    val currentUserId = currentUser?.uid ?: ""
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                val newImage = Image(
+                    id = System.currentTimeMillis().toString(),
+                    image_url = uri.toString(),
+                    title = "New Pin",
+                    description = "Selected from gallery",
+                    category = "Gallery",
+                    user_id = currentUserId,
+                    likes = 0
+                )
+                savedImages = savedImages + newImage
+                filteredImages = savedImages
+            }
+        }
+    )
+
+    // Fetch saved images from Firebase
+    LaunchedEffect(currentUser) {
+        currentUser?.let { user ->
+            val userId = user.uid
+            database.child("users").child(userId).child("saved_images").get()
+                .addOnSuccessListener { snapshot ->
+                    val imagesList = mutableListOf<Image>()
+                    snapshot.children.forEach { child ->
+                        val image = child.getValue(Image::class.java)
+                        if (image != null) {
+                            imagesList.add(image)
+                        }
+                    }
+                    savedImages = imagesList
+                    filteredImages = imagesList // Initially show all images
+                }
+                .addOnFailureListener {
+                    errorMessage = "Failed to load saved images."
+                }
+        }
+    }
+
+    // Filter images based on search query
+    LaunchedEffect(searchQuery, savedImages) {
+        if (searchQuery.isEmpty()) {
+            filteredImages = savedImages
+        } else {
+            filteredImages = savedImages.filter { image ->
+                image.title.contains(searchQuery, ignoreCase = true) ||
+                        image.category.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                navController = navController,
+                currentRoute = currentRoute,
+                onCreateClick = { showBottomSheet = true }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Top bar with search bar included
+            SavedPinsTopBar(navController = navController, auth = auth, database = database)
+
+            // Search bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { query -> searchQuery = query },
+                singleLine = true,
+                label = { Text(text = "Search your Pins") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search Icon"
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Red,
+                    unfocusedBorderColor = Color.Gray,
+                    cursorColor = Color.Red
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Display images or errors
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else if (filteredImages.isEmpty()) {
+                Text(
+                    text = "No pins found.",
+                    color = Color.Gray,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(filteredImages) { image ->
+                        ImageCard(image = image, navController = navController)
+                    }
+                }
+            }
+        }
+    }
+
+    // Show bottom sheet
+    BottomSheetContent(
+        sheetState = sheetState,
+        showBottomSheet = showBottomSheet,
+        onDismissRequest = {
+            scope.launch {
+                sheetState.hide()
+            }.invokeOnCompletion {
+                if (!sheetState.isVisible) {
+                    showBottomSheet = false
+                }
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomSheetContent(
+    sheetState: SheetState,
+    showBottomSheet: Boolean,
+    onDismissRequest: () -> Unit
+) {
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+
+    // Remember the image URI to store the captured image
+    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Create an ActivityResultLauncher for the camera
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                Toast.makeText(context, "Image captured!", Toast.LENGTH_SHORT).show()
+                capturedImageUri?.let { uri ->
+                    Log.d("Camera", "Captured Image URI: $uri")
+                    // Handle the captured image URI (e.g., upload to Firebase)
+                }
+            } else {
+                Toast.makeText(context, "Image capture failed!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    // Gallery picker launcher for Pin
+    val pinGalleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                Toast.makeText(context, "Image selected for Pin!", Toast.LENGTH_SHORT).show()
+                Log.d("Pin Gallery", "Selected Image URI: $uri")
+                Toast.makeText(context, "Image captured!", Toast.LENGTH_SHORT).show()
+                // Handle the selected image URI for Pin (e.g., upload to Firebase)
+                uploadImageToFirebase(uri, context, "pin_images")
+            } ?: run {
+                Toast.makeText(context, "No image selected.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    // Gallery picker launcher for Board
+    val boardGalleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                Toast.makeText(context, "Image selected for Board!", Toast.LENGTH_SHORT).show()
+                Log.d("Board Gallery", "Selected Image URI: $uri")
+                Toast.makeText(context, "Image captured!", Toast.LENGTH_SHORT).show()
+                // Handle the selected image URI for Board (e.g., upload to Firebase)
+                uploadImageToFirebase(uri, context, "board_images")
+            } ?: run {
+                Toast.makeText(context, "No image selected.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    // Function to launch the camera
+    fun openCamera() {
+        val imageFile = File(context.cacheDir, "captured_image_${System.currentTimeMillis()}.jpg")
+        capturedImageUri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider", // Ensure this matches your Manifest provider authority
+            imageFile
+        )
+
+        val uri = capturedImageUri
+        if (uri != null) {
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Failed to create image file", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Function to launch the gallery picker for Pin
+    fun openGalleryForPin() {
+        pinGalleryLauncher.launch("image/*")
+    }
+
+    // Function to launch the gallery picker for Board
+    fun openGalleryForBoard() {
+        boardGalleryLauncher.launch("image/*")
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = onDismissRequest,
+            sheetState = sheetState
+        ) {
+            // Bottom sheet content
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    IconButton(onClick = onDismissRequest) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                    Text(
+                        text = "Start creating now",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 24.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Pin, Camera, Board options
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        IconButton(onClick = { openGalleryForPin() }) {
+                            Icon(Icons.Default.Add, contentDescription = "Pin")
+                        }
+                        Text("Pin")
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        IconButton(onClick = { openCamera() }) {
+                            Icon(Icons.Rounded.CameraAlt, contentDescription = "Camera")
+                        }
+                        Text("Camera")
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        IconButton(onClick = { openGalleryForBoard() }) {
+                            Icon(Icons.Default.AddChart, contentDescription = "Board")
+                        }
+                        Text("Board")
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun uploadImageToFirebase(
+    uri: Uri,
+    context: Context,
+    folder: String
+) {
+    val storageRef = FirebaseStorage.getInstance().reference.child("$folder/${System.currentTimeMillis()}.jpg")
+
+    storageRef.putFile(uri)
+        .addOnSuccessListener { taskSnapshot ->
+            storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                Toast.makeText(context, "Image uploaded successfully!", Toast.LENGTH_SHORT).show()
+                Log.d("Firebase Upload", "Image URL: $downloadUri")
+                // Here, you can add logic to save the image URL to the database if needed
+            }
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Image uploaded.", Toast.LENGTH_SHORT).show()
+        }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
